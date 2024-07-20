@@ -1,4 +1,4 @@
-const ControlledInput = (props) => {
+export const ControlledInput = (props) => {
 	const { title, state, stateHandler } = props;
 	return (
 		<div>

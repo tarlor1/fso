@@ -20,11 +20,11 @@ const App = () => {
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		//check if newPerson already has the same name
-		let doesContain = false;
-		for (let i = 0; i < persons.length; i++) {
-			if (persons[i].name === newName) {
-				doesContain = true;
-				break;
+		event.preventDefault();
+		for (const person of persons) {
+			if (person.name === newName) {
+				alert(`${newName} is already added to phonebook`);
+				return;
 			}
 		}
 
@@ -33,13 +33,9 @@ const App = () => {
 			number: newNumber,
 		};
 
-		if (doesContain) {
-			alert(`${newName} is already added to phonebook`);
-		} else {
-			setPersons(persons.concat(newPerson));
-			setNewName("");
-			setNewNumber("");
-		}
+		setPersons(persons.concat(newPerson));
+		setNewName("");
+		setNewNumber("");
 	};
 
 	const createInputHandler = (setFunction) => {

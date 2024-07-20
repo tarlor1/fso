@@ -1,11 +1,8 @@
+import { ControlledInput } from "./PersonForm";
+
 const Filter = (props) => {
-	const { title, state, setState, handler } = props;
-	return (
-		<div>
-			{title}
-			<input type="text" value={state} onChange={handler} />
-		</div>
-	);
+	const { title, state, handler } = props;
+	return <ControlledInput title={title} state={state} stateHandler={handler} />;
 };
 
 export default Filter;
