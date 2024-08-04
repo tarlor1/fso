@@ -1,29 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
-import PersonList from "./components/PersonList";
+import Person from "./components/PersonList";
+import numberService from "./services/numbers";
 
 const App = () => {
-	const [persons, setPersons] = useState([
-		{ name: "Arto Hellas", number: "040-123456", id: 1 },
-		{ name: "Ada Lovelace", number: "39-44-5323523", id: 2 },
-		{ name: "Dan Abramov", number: "12-43-234345", id: 3 },
-		{ name: "Mary Poppendieck", number: "39-23-6423122", id: 4 },
-	]);
+	const [persons, setPersons] = useState([]);
 	const [newName, setNewName] = useState("");
 	const [newNumber, setNewNumber] = useState("");
 	const [search, setSearch] = useState("");
 
-	const peopleToShow = persons.filter((value) =>
-		value.name.toLowerCase().includes(search.toLowerCase())
-	);
+	useEffect(() => {
+		numberService.getAll().then((initialPersons) => setPersons(initialPersons));
+	}, []);
+
+	const peopleToShow = persons.filter((value) => {
+		return value?.name.toLowerCase().includes(search.toLowerCase());
+	});
+
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		//check if newPerson already has the same name
-		event.preventDefault();
 		for (const person of persons) {
 			if (person.name === newName) {
-				alert(`${newName} is already added to phonebook`);
+				if (
+					window.confirm(
+						`${newName} is already added to phonebook, replace the old number with a new one?`
+					)
+				) {
+					const newPerson = {
+						...person,
+						number: newNumber,
+					};
+
+					numberService.update(person.id, newPerson).then((returnedPerson) => {
+						setPersons(
+							persons.map((p) => (p.id !== person.id ? p : returnedPerson))
+						);
+					});
+					setNewName("");
+					setNewNumber("");
+				}
 				return;
 			}
 		}
@@ -33,9 +50,11 @@ const App = () => {
 			number: newNumber,
 		};
 
-		setPersons(persons.concat(newPerson));
-		setNewName("");
-		setNewNumber("");
+		numberService.create(newPerson).then((person) => {
+			setPersons(persons.concat(person));
+			setNewName("");
+			setNewNumber("");
+		});
 	};
 
 	const createInputHandler = (setFunction) => {
@@ -44,6 +63,15 @@ const App = () => {
 		};
 	};
 
+	const deletePersonOf = (id, name) => {
+		if (window.confirm(`Delete ${name}?`)) {
+			numberService.deletePerson(id).then((deletedPerson) => {
+				setPersons(
+					persons.filter((element) => element.id !== deletedPerson.id)
+				);
+			});
+		}
+	};
 	return (
 		<div>
 			<h2>Phonebook</h2>
@@ -62,7 +90,15 @@ const App = () => {
 				handleNewNumber={createInputHandler(setNewNumber)}
 			/>
 			<h2>Numbers</h2>
-			<PersonList showItem={peopleToShow} />
+			<ul>
+				{peopleToShow.map((value) => (
+					<Person
+						key={value.id}
+						person={value}
+						deleteHandler={() => deletePersonOf(value.id, value.name)}
+					/>
+				))}
+			</ul>
 		</div>
 	);
 };
