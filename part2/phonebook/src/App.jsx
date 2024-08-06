@@ -4,12 +4,31 @@ import PersonForm from "./components/PersonForm";
 import Person from "./components/PersonList";
 import numberService from "./services/numbers";
 
+const Message = ({ message, error }) => {
+	if (message === null) {
+		return null;
+	}
+
+	const messageStyle = {
+		color: error ? "red" : "green",
+		border: "solid",
+		background: "lightgrey",
+		padding: 10,
+		fontSize: 20,
+		fontWeight: "bold",
+		borderWidth: 5,
+		borderRadius: 5,
+	};
+	return <div style={messageStyle}>{message}</div>;
+};
+
 const App = () => {
 	const [persons, setPersons] = useState([]);
 	const [newName, setNewName] = useState("");
 	const [newNumber, setNewNumber] = useState("");
 	const [search, setSearch] = useState("");
-
+	const [message, setMessage] = useState("");
+	const [error, setError] = useState(false);
 	useEffect(() => {
 		numberService.getAll().then((initialPersons) => setPersons(initialPersons));
 	}, []);
@@ -33,13 +52,26 @@ const App = () => {
 						number: newNumber,
 					};
 
-					numberService.update(person.id, newPerson).then((returnedPerson) => {
-						setPersons(
-							persons.map((p) => (p.id !== person.id ? p : returnedPerson))
-						);
-					});
-					setNewName("");
-					setNewNumber("");
+					numberService
+						.update(person.id, newPerson)
+						.then((returnedPerson) => {
+							setPersons(
+								persons.map((p) => (p.id !== person.id ? p : returnedPerson))
+							);
+							setNewName("");
+							setNewNumber("");
+							setMessage(`${newName} number has changed to ${newNumber}`);
+						})
+						.catch((error) => {
+							setMessage(
+								`Information of ${person.name} has already been removed from server`
+							);
+							setError(true);
+							setPersons(persons.filter((p) => p.id !== person.id));
+						});
+					setTimeout(() => {
+						setMessage(null);
+					}, 2000);
 				}
 				return;
 			}
@@ -54,7 +86,11 @@ const App = () => {
 			setPersons(persons.concat(person));
 			setNewName("");
 			setNewNumber("");
+			setMessage(`Added ${newName}`);
 		});
+		setTimeout(() => {
+			setMessage(null);
+		}, 2000);
 	};
 
 	const createInputHandler = (setFunction) => {
@@ -69,12 +105,17 @@ const App = () => {
 				setPersons(
 					persons.filter((element) => element.id !== deletedPerson.id)
 				);
+				setMessage(`Deleted ${deletedPerson.name}`);
+				setTimeout(() => {
+					setMessage(null);
+				}, 2000);
 			});
 		}
 	};
 	return (
 		<div>
 			<h2>Phonebook</h2>
+			<Message message={message} error={error} />
 			<Filter
 				title="filter shown with"
 				state={search}
